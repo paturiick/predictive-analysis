@@ -66,8 +66,6 @@ def train_lstm(X_train, y_train, X_test, y_test, seq_length, input_size, hidden_
             loss.backward()
             optimizer.step()
 
-        st.write(f"Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss / (len(X_train) / batch_size):.4f}")
-
     # Evaluate the model
     model.eval()
     with torch.no_grad():

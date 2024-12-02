@@ -1,59 +1,63 @@
-import pandas as pd
-import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import pandas as pd
+import pickle
 
-# Load the dataset
-file_path = r'D:\csv file\disaster_sea.csv'
-df = pd.read_csv(file_path)
 
-# Drop missing target values
-df = df.dropna(subset=['Disaster Type'])
+def train_knn_model(features, labels, k=5, metric='euclidean', weights='uniform'):
+    # Encode labels if they are categorical
+    if labels.dtype == 'object':
+        label_encoder = LabelEncoder()
+        labels = label_encoder.fit_transform(labels)
+    else:
+        label_encoder = None
 
-# Impute missing numerical values
-numerical_columns = ['Total Damage (\'000 US$)', 'Total Affected', 'Start Year', 'Start Month']
-imputer = SimpleImputer(strategy='mean')
-df[numerical_columns] = imputer.fit_transform(df[numerical_columns])
+    # Train-test split
+    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
 
-# Handle missing categorical values (if any)
-categorical_columns = ['Country']
-df[categorical_columns] = df[categorical_columns].fillna('Unknown')
+    # Feature scaling
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
 
-# Encode categorical variables
-label_encoder = LabelEncoder()
-df['Disaster Type'] = label_encoder.fit_transform(df['Disaster Type'])
-df['Country'] = label_encoder.fit_transform(df['Country'])
+    # Train the KNN classifier
+    knn_model = KNeighborsClassifier(n_neighbors=k, metric=metric, weights=weights)
+    knn_model.fit(X_train, y_train)
 
-# Normalize numerical features
-scaler = StandardScaler()
-df[numerical_columns] = scaler.fit_transform(df[numerical_columns])
+    # Evaluate the model
+    y_pred = knn_model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+    class_report = classification_report(y_test, y_pred, output_dict=True)
+    conf_matrix = confusion_matrix(y_test, y_pred)
 
-# Select features and target
-features = ['Start Year', 'Start Month', 'Country'] + numerical_columns
-X = df[features]
-y = df['Disaster Type']
+    return {
+        "model": knn_model,
+        "scaler": scaler,
+        "label_encoder": label_encoder,  # Save encoder if used
+        "accuracy": accuracy,
+        "classification_report": pd.DataFrame(class_report).transpose(),
+        "confusion_matrix": conf_matrix
+    }
 
-# Verify no NaN values remain in X
-if X.isnull().values.any():
-    raise ValueError("NaN values found in features after preprocessing")
 
-# Split into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+def save_knn_model(model, scaler, label_encoder=None, file_path='D:\csv file\disaster_sea.csv'):
+    model_data = {
+        "model": model,
+        "scaler": scaler,
+        "label_encoder": label_encoder
+    }
+    with open(file_path, 'wb') as file:
+        pickle.dump(model_data, file)
+    print(f"Model saved successfully to {file_path}")
 
-# Train the KNN model
-k = 5  # Choose the number of neighbors
-knn = KNeighborsClassifier(n_neighbors=k)
-knn.fit(X_train, y_train)
 
-# Make predictions
-y_pred = knn.predict(X_test)
-
-# Evaluate the model
-accuracy = accuracy_score(y_test, y_pred)
-report = classification_report(y_test, y_pred, zero_division=0)
-
-print("\nAccuracy:", accuracy)
-print("\nClassification Report:\n", report)
+def load_data(file_path):
+    data = pd.read_csv(file_path)
+    data = data.fillna(0)
+    # Use 'Disaster Type' as labels and other relevant columns as features
+    features = data[['Total Deaths', 'No. Injured', 'No. Affected', 'No. Homeless', 'Total Damage (\'000 US$)']].fillna(0)
+    labels = data['Disaster Type']
+    
+    return features, labels
