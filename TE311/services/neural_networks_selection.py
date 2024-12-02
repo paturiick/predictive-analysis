@@ -4,6 +4,9 @@ from models.neural_networks import preprocess_and_create_sequences, train_lstm
 from sklearn.model_selection import train_test_split
 
 def neural_networks_selection(data):
+    
+    st.title("Neural Networks for Time-Series Prediction")
+    
     seq_length = st.slider("Years to Predict", min_value=2, max_value=10, value=5)
     hidden_size = st.slider("Hidden Size", min_value=32, max_value=256, value=128)
     num_layers = st.slider("Number of Layers", min_value=1, max_value=5, value=3)
@@ -28,35 +31,40 @@ def neural_networks_selection(data):
         
         st.success(f"Test Loss: {test_loss:.4f}")
 
-        # Convert predictions into binary outcomes
-        threshold = st.slider("Prediction Threshold", min_value=0.1, max_value=0.9, value=0.5)
-        binary_predictions = ["Disaster Likely" if pred >= threshold else "Disaster Unlikely" for pred in predictions]
+        # Ensure consistent lengths for all arrays
+        display_length = min(seq_length, len(predictions), len(y_test))
+        predictions = predictions[:display_length]
+        y_test = y_test[:display_length]
+        years = range(1, display_length + 1)
 
-        # Display Predictions and Binary Results
-        st.subheader("Prediction Results:")
-        st.write(f"Predictions for {seq_length} years")
+        # Convert predictions into a DataFrame
         results_df = pd.DataFrame({
-            "Year": range(1, len(predictions) + 1),
+            "Year": [f"Year {i}" for i in years],
             "Predicted Value": [pred.item() for pred in predictions],
-            "Prediction": binary_predictions,
             "Actual Value": y_test.flatten()
         })
-        st.write(results_df.head(20)) # Display the first 20 predictions
+        st.write(results_df)
+
+        # Visualize Predictions
+        st.line_chart(results_df.set_index("Year"))
 
         # Explanation Section
-        st.subheader("Explanation")
-        if test_loss < 0.1:
+        st.subheader("Results")
+        differences = abs(results_df["Predicted Value"] - results_df["Actual Value"])
+        avg_difference = differences.mean()
+        
+        if avg_difference < 0.1:
             st.success(
-                "The model achieved excellent performance with a very low test loss. "
-                "Predictions are highly reliable, and the model effectively captured disaster patterns over time."
+                f"The predictions are highly accurate with an average difference of {avg_difference:.2f}. "
+                "This indicates that the model effectively learned the patterns and relationships in the data.",
             )
-        elif test_loss < 0.5:
+        elif avg_difference < 0.5:
             st.info(
-                "The model shows moderate performance. Predictions align reasonably well with actual data, "
-                "but some refinements may improve reliability."
+                f"The predictions are moderately accurate with an average difference of {avg_difference:.2f}. "
+                "The model captures trends reasonably well but may require tuning for improved precision.",
             )
         else:
             st.warning(
-                "The model's performance is suboptimal, with a high test loss. Predictions may not be very reliable. "
-                "Consider revisiting data preprocessing, feature selection, or hyperparameter tuning."
+                f"The predictions have a high average difference of {avg_difference:.2f}, "
+                "indicating that the model struggles to align closely with the actual values. ",
             )

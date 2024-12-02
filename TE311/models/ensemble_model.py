@@ -87,7 +87,7 @@ def train_ensemble_model(data, disaster_type):
     feature_importances = dict(zip(features, rf_model.feature_importances_))
 
     # Country-Specific Predictions
-    country_data = data[['Country'] + features].drop_duplicates()
+    country_data = data[['Country', 'Location'] + features].drop_duplicates()
     country_data_scaled = scaler.transform(country_data[features])
     rf_country_probs = rf_model.predict_proba(country_data_scaled)[:, 1]
     svm_country_probs = svm_model.predict_proba(country_data_scaled)[:, 1]
@@ -100,5 +100,5 @@ def train_ensemble_model(data, disaster_type):
         "accuracy": accuracy,
         "classification_report": classification_report_as_dataframe(class_report),
         "feature_importances": feature_importances,
-        "country_predictions": country_data[['Country', 'Prediction', 'Prediction Probability']].sort_values(by='Prediction Probability', ascending=False)
+        "country_predictions": country_data[['Location', 'Country', 'Prediction', 'Prediction Probability']].sort_values(by='Prediction Probability', ascending=False)
     }

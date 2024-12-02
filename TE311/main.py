@@ -10,10 +10,11 @@ from streamlit_option_menu import option_menu
 # App Configuration
 config_content = """
 [theme]
-primaryColor="#a6bb8d"
-backgroundColor="#3c6255"
-secondaryBackgroundColor="#61876e"
-textColor="#eae7b1"
+primaryColor="#859f3d"
+backgroundColor="#1a1a19"
+secondaryBackgroundColor="#31511e"
+textColor="#f6fcdf"
+font="sans serif"
 """
 
 st.set_page_config(layout="wide")
@@ -32,7 +33,7 @@ with st.sidebar:
     )
 
 # File Path
-file_path = r'D:\csv file\disaster_sea.csv'
+file_path = r'TE311/disaster_sea.csv'
 
 if selected == "Dataset":
     st.title("Predictive Analysis for Natural Disaster Management")

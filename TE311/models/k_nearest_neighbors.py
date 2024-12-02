@@ -1,63 +1,59 @@
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-import pandas as pd
-import pickle
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.impute import SimpleImputer
+import numpy as np
 
+def train_knn_model(data, target, k, disaster_type):
+    # Predefined features based on the dataset
+    predefined_features = [
+        'Total Deaths', 'Latitude', 'Longitude', 'No. Injured',
+        'Total Damage (\'000 US$)', 'Total Affected', 'Magnitude'
+    ]
 
-def train_knn_model(features, labels, k=5, metric='euclidean', weights='uniform'):
-    # Encode labels if they are categorical
-    if labels.dtype == 'object':
-        label_encoder = LabelEncoder()
-        labels = label_encoder.fit_transform(labels)
-    else:
-        label_encoder = None
+    # Ensure predefined features exist in the dataset
+    for feature in predefined_features:
+        if feature not in data.columns:
+            raise ValueError(f"Feature '{feature}' is missing from the dataset.")
+
+    # Filter data for the specific disaster type
+    data_filtered = data[data[target] == disaster_type]
+
+    if data_filtered.empty:
+        raise ValueError(f"No data available for the selected disaster type: {disaster_type}")
+
+    # Check if there are enough rows for training and testing
+    if len(data_filtered) < 5:
+        raise ValueError(f"Not enough data for disaster type '{disaster_type}' to train a KNN model.")
+
+    # Split the data into features (X) and target (y)
+    X = data_filtered[predefined_features]
+    y = data_filtered[target]
+
+    # Handle missing values by imputing them with the mean
+    imputer = SimpleImputer(strategy='mean')
+    X_imputed = imputer.fit_transform(X)
 
     # Train-test split
-    X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X_imputed, y, test_size=0.2, random_state=42, stratify=y)
 
-    # Feature scaling
-    scaler = StandardScaler()
-    X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
+    # Train the KNN model
+    knn = KNeighborsClassifier(n_neighbors=k)
+    knn.fit(X_train, y_train)
 
-    # Train the KNN classifier
-    knn_model = KNeighborsClassifier(n_neighbors=k, metric=metric, weights=weights)
-    knn_model.fit(X_train, y_train)
+    # Make predictions
+    y_pred = knn.predict(X_test)
 
-    # Evaluate the model
-    y_pred = knn_model.predict(X_test)
+    # Calculate accuracy
     accuracy = accuracy_score(y_test, y_pred)
-    class_report = classification_report(y_test, y_pred, output_dict=True)
-    conf_matrix = confusion_matrix(y_test, y_pred)
+
+    # Generate a classification report
+    class_report = classification_report(y_test, y_pred, zero_division=0)
 
     return {
-        "model": knn_model,
-        "scaler": scaler,
-        "label_encoder": label_encoder,  # Save encoder if used
+        "model": knn,
         "accuracy": accuracy,
-        "classification_report": pd.DataFrame(class_report).transpose(),
-        "confusion_matrix": conf_matrix
+        "y_test": y_test,
+        "y_pred": y_pred,
+        "classification_report": class_report
     }
-
-
-def save_knn_model(model, scaler, label_encoder=None, file_path='D:\csv file\disaster_sea.csv'):
-    model_data = {
-        "model": model,
-        "scaler": scaler,
-        "label_encoder": label_encoder
-    }
-    with open(file_path, 'wb') as file:
-        pickle.dump(model_data, file)
-    print(f"Model saved successfully to {file_path}")
-
-
-def load_data(file_path):
-    data = pd.read_csv(file_path)
-    data = data.fillna(0)
-    # Use 'Disaster Type' as labels and other relevant columns as features
-    features = data[['Total Deaths', 'No. Injured', 'No. Affected', 'No. Homeless', 'Total Damage (\'000 US$)']].fillna(0)
-    labels = data['Disaster Type']
-    
-    return features, labels
