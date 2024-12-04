@@ -4,7 +4,7 @@ from streamlit_extras.dataframe_explorer import dataframe_explorer
 
 def disaster_prediction_selection(data):
     st.title("Ensemble Model for Disaster Prediction")
-    
+
     disaster_type = st.selectbox("Select Disaster Type to predict", data['Disaster Type'].unique())
 
     if data.empty:
@@ -28,7 +28,7 @@ def disaster_prediction_selection(data):
 
         # Explanation for Country-Specific Predictions
         st.info(
-            f"The table above highlights the likelihood of '{disaster_type}' occurring in each country. "
+            f"The table above highlights the likelihood of '{disaster_type}' occurring in different areas of each countries. "
             f"Countries with higher probabilities are more vulnerable and may require immediate disaster management efforts."
         )
     except Exception as e:
