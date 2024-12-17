@@ -4,9 +4,6 @@ from models.neural_networks import preprocess_and_create_sequences, train_lstm
 from sklearn.model_selection import train_test_split
 
 def neural_networks_selection(data):
-    
-    st.title("Neural Networks for Time-Series Prediction")
-    
     seq_length = st.slider("Years to Predict", min_value=2, max_value=10, value=5)
     hidden_size = st.slider("Hidden Size", min_value=32, max_value=256, value=128)
     num_layers = st.slider("Number of Layers", min_value=1, max_value=5, value=3)

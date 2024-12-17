@@ -4,7 +4,6 @@ import pandas as pd
 from dataset import load_data
 from services.ensemble_model_selection import disaster_prediction_selection
 from services.neural_networks_selection import neural_networks_selection
-from services.knn_selection import knn_selection
 from streamlit_option_menu import option_menu
 
 # App Configuration
@@ -25,15 +24,15 @@ with open(".streamlit/config.toml", "w") as config_file:
 # Sidebar Navigation
 with st.sidebar:
     selected = option_menu(
-        menu_title = "Main Menu",
-        options = ["Dataset", "Model Selection"],
-        icons = ["file-earmark", "robot"],
-        menu_icon = "cast",
-        default_index = 0
+        menu_title="Main Menu",
+        options=["Dataset", "Model Selection"],
+        icons=["file-earmark", "robot"],
+        menu_icon="cast",
+        default_index=0,
     )
 
 # File Path
-file_path = r'TE311/disaster_sea.csv'
+file_path = r'C:\Users\user\PycharmProjects\TE311/disaster_sea.csv'
 
 if selected == "Dataset":
     st.title("Predictive Analysis for Natural Disaster Management")
@@ -71,17 +70,16 @@ elif selected == "Model Selection":
     st.subheader("Model Selection")
     model_selection = st.selectbox(
         "Select a machine learning model:",
-        ["Choose Model", "Ensemble Model (Random Forest and SVM Models)", "Neural Networks", "K-Nearest Neighbors"]
+        ["Choose Model", "Ensemble Model (Random Forest and SVM Models)", "Neural Networks"]
     )
 
     if model_selection == "Ensemble Model (Random Forest and SVM Models)":
-        disaster_prediction_selection(data)
+        st.subheader("Disaster Prediction with Ensemble Models")
+        disaster_prediction_selection(data)  # Call the function from services/ensemble_model_selection
 
     elif model_selection == "Neural Networks":
-        neural_networks_selection(data)
-
-    elif model_selection == "K-Nearest Neighbors":
-        knn_selection()
+        st.subheader("Neural Networks Model")
+        neural_networks_selection(data)  # Call the function from services/neural_networks_selection
 
     elif model_selection == "Choose Model":
         st.write("Please select a model.")
