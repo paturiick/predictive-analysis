@@ -1,10 +1,10 @@
 import streamlit as st
 from models.ensemble_model import train_ensemble_model
 import pandas as pd
+from dataset import load_data
 from calendar import monthrange
 
 def disaster_prediction_selection(data):
-
     # Check if the dataset is empty
     if data.empty:
         st.error("The provided dataset is empty. Please upload a valid dataset.")
@@ -49,20 +49,42 @@ def disaster_prediction_selection(data):
             # Call the ensemble model
             results = train_ensemble_model(data, prediction_input)
 
+            # Determine if the disaster is likely to happen
+            threshold = 0.5  # Adjust this threshold as needed
+            disaster_likelihood = (
+                "Yes" if results['prediction_probability'] >= threshold else "No"
+            )
+
             # Display Results
             st.write("## Prediction Results")
-            predicted_disaster = results["predicted_disaster"]
-            probability = results["prediction_probability"]
+            st.success(f"**Predicted Disaster Type:** {results['predicted_disaster']}")
+            st.info(f"**Probability of Occurrence:** {results['prediction_probability']:.2%}")
 
-            # Display predictions
-            st.success(f"**Predicted Disaster Type:** {predicted_disaster}")
-            st.info(f"**Probability of Occurrence:** {probability:.2%}")
+            # Display Model Evaluation Metrics as a Table
+            st.write("### Model Evaluation Metrics")
+            metrics_df = pd.DataFrame({
+                "Metric": [
+                    "Accuracy", 
+                    "Precision", 
+                    "Recall", 
+                    "F1 Score",
+                    "Disaster Likely to Happen"
+                ],
+                "Value": [
+                    f"{results['model_accuracy']:.4f}",
+                    f"{results['model_precision']:.4f}",
+                    f"{results['model_recall']:.4f}",
+                    f"{results['model_f1_score']:.4f}",
+                    disaster_likelihood
+                ]
+            })
+            st.table(metrics_df)
 
             # Additional Information
             st.write(
                 f"Based on historical trends, the most likely disaster type in **{country}** "
-                f"on **{year}-{month:02d}-{day:02d}** is **{predicted_disaster}**, "
-                f"with a probability of **{probability:.2%}**."
+                f"on **{year}-{month:02d}-{day:02d}** is **{results['predicted_disaster']}**, "
+                f"with a probability of **{results['prediction_probability']:.2%}**."
             )
 
         except Exception as e:
