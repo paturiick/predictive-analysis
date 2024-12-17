@@ -1,5 +1,5 @@
 import streamlit as st
-from models.ensemble_model import train_ensemble_model
+from models.random_forest import train_ensemble_model
 import pandas as pd
 from dataset import load_data
 from calendar import monthrange

@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import pandas as pd
 from dataset import load_data
-from services.ensemble_model_selection import disaster_prediction_selection
+from services.random_forest_selection import disaster_prediction_selection
 from services.neural_networks_selection import neural_networks_selection
 from streamlit_option_menu import option_menu
 
@@ -70,12 +70,12 @@ elif selected == "Model Selection":
     st.subheader("Model Selection")
     model_selection = st.selectbox(
         "Select a machine learning model:",
-        ["Choose Model", "Ensemble Model (Random Forest and SVM Models)", "Neural Networks"]
+        ["Choose Model", "Random Forest", "Neural Networks"]
     )
 
-    if model_selection == "Ensemble Model (Random Forest and SVM Models)":
-        st.subheader("Disaster Prediction with Ensemble Models")
-        disaster_prediction_selection(data)  # Call the function from services/ensemble_model_selection
+    if model_selection == "Random Forest":
+        st.subheader("Disaster Prediction with Random Forest Model")
+        disaster_prediction_selection(data)
 
     elif model_selection == "Neural Networks":
         st.subheader("Neural Networks Model")
